@@ -394,7 +394,7 @@ function confirmAndSubmitForm() {
       .apiSubmitForm(payload);
   } else {
     // Jika dijalankan via GitHub Pages (HTTP Fetch Post)
-    fetch(AppState.webAppUrl, {
+    fetch(AppState.webAppUrl = "https://script.google.com/macros/s/AKfycbxeemKpM31E5hJJ9CUbDVmSnygGseSgU3jKJx-Z0btbdqEzK4YlkFwZ3KCw_UdjdbVyYA/exec", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "submitForm", ...payload })
