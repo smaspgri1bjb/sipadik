@@ -16,7 +16,7 @@ const AppState = {
   locationCaptured: false,
   lat: null,
   lng: null,
-  webAppUrl: typeof google !== 'undefined' && google.script ? null : window.location.href
+  webAppUrl: typeof google !== 'https://script.google.com/macros/s/AKfycbxeemKpM31E5hJJ9CUbDVmSnygGseSgU3jKJx-Z0btbdqEzK4YlkFwZ3KCw_UdjdbVyYA/exec' && google.script ? null : window.location.href
 };
 
 // Inisialisasi saat DOM Selesai Dimuat
@@ -394,7 +394,7 @@ function confirmAndSubmitForm() {
       .apiSubmitForm(payload);
   } else {
     // Jika dijalankan via GitHub Pages (HTTP Fetch Post)
-    fetch(AppState.webAppUrl = "https://script.google.com/macros/s/AKfycbxeemKpM31E5hJJ9CUbDVmSnygGseSgU3jKJx-Z0btbdqEzK4YlkFwZ3KCw_UdjdbVyYA/exec", {
+    fetch(AppState.webAppUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "submitForm", ...payload })
