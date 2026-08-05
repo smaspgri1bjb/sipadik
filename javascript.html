@@ -1,0 +1,475 @@
+<script>
+/**
+ * SIPADIK - Sistem Pemutakhiran Data Peserta Didik
+ * SMAS PGRI 1 Banjarbaru
+ * 
+ * File: javascript.html
+ * Deskripsi: Logika client-side (stepper 6-tahap, geolokasi, validasi, & API communication).
+ */
+
+// Global State Application
+const AppState = {
+  currentStep: 1,
+  totalSteps: 6, // Step 1: Pribadi, 2: Ayah, 3: Ibu, 4: Wali (Conditional), 5: Kontak, 6: Periodik
+  isWaliRequired: false,
+  formData: {},
+  locationCaptured: false,
+  lat: null,
+  lng: null,
+  webAppUrl: typeof google !== 'undefined' && google.script ? null : window.location.href
+};
+
+// Inisialisasi saat DOM Selesai Dimuat
+document.addEventListener("DOMContentLoaded", function() {
+  initGeolocationModal();
+  bindFormEvents();
+  initFlatpickrDatepicker();
+  updateStepperUI();
+});
+
+/**
+ * Inisialisasi Flatpickr Datepicker Modern
+ */
+function initFlatpickrDatepicker() {
+  if (typeof flatpickr !== 'undefined') {
+    flatpickr("#tgl_lahir", {
+      locale: typeof flatpickr.l10ns !== 'undefined' && flatpickr.l10ns.id ? flatpickr.l10ns.id : "id",
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "j F Y",
+      allowInput: true,
+      maxDate: "today",
+      monthSelectorType: "dropdown",
+      disableMobile: "true"
+    });
+  }
+}
+
+/**
+ * 1. LOGIKA GEOLOKASI (GPS PERMISSION)
+ */
+function initGeolocationModal() {
+  const geoModal = document.getElementById("geoModal");
+  if (geoModal) {
+    geoModal.classList.add("active");
+  }
+}
+
+function requestDeviceLocation() {
+  const btn = document.getElementById("btnEnableGps");
+  if (btn) btn.disabled = true;
+  
+  if ("geolocation" in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        AppState.lat = position.coords.latitude;
+        AppState.lng = position.coords.longitude;
+        AppState.locationCaptured = true;
+
+        // Isi ke input hidden
+        document.getElementById("lintang").value = AppState.lat;
+        document.getElementById("bujur").value = AppState.lng;
+
+        const geoModal = document.getElementById("geoModal");
+        if (geoModal) geoModal.classList.remove("active");
+
+        showNotification("Lokasi Berhasil Ditangkap", "Titik koordinat rumah berhasil ditentukan untuk perhitungan jarak sekolah.");
+      },
+      function(error) {
+        if (btn) btn.disabled = false;
+        showNotification("Lokasi Diperlukan", "Aplikasi membutuhkan izin akses GPS untuk menghitung jarak rumah ke sekolah. Harap izinkan akses lokasi di browser Anda.", "warning");
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  } else {
+    showNotification("GPS Tidak Didukung", "Perangkat/browser Anda tidak mendukung fitur Geolocation.", "danger");
+  }
+}
+
+/**
+ * 2. EVENT BINDING & EVENT HANDLERS
+ */
+function bindFormEvents() {
+  // Event Tempat Tinggal -> Toggle Step Wali
+  const selectTempatTinggal = document.getElementById("tempat_tinggal");
+  if (selectTempatTinggal) {
+    selectTempatTinggal.addEventListener("change", function() {
+      const isWali = (this.value === "Wali");
+      AppState.isWaliRequired = isWali;
+      
+      const stepWaliNav = document.getElementById("stepNav4");
+      if (stepWaliNav) {
+        stepWaliNav.style.display = isWali ? "flex" : "none";
+      }
+    });
+  }
+
+  // Event Radio Status Ayah (Hidup vs Wafat)
+  const radioAyahList = document.querySelectorAll('input[name="status_ayah"]');
+  radioAyahList.forEach(radio => {
+    radio.addEventListener("change", function() {
+      const isWafat = (this.value === "Wafat");
+      const pekerjaanSelect = document.getElementById("pekerjaan_ayah");
+      const penghasilanSelect = document.getElementById("penghasilan_ayah");
+      const nikInput = document.getElementById("nik_ayah");
+
+      if (isWafat) {
+        if (pekerjaanSelect) pekerjaanSelect.value = "Sudah Meninggal";
+        if (penghasilanSelect) penghasilanSelect.value = "Tidak Berpenghasilan";
+        if (nikInput) { nikInput.value = ""; nikInput.required = false; }
+      } else {
+        if (nikInput) nikInput.required = true;
+      }
+    });
+  });
+
+  // Event Radio Status Ibu (Hidup vs Wafat)
+  const radioIbuList = document.querySelectorAll('input[name="status_ibu"]');
+  radioIbuList.forEach(radio => {
+    radio.addEventListener("change", function() {
+      const isWafat = (this.value === "Wafat");
+      const pekerjaanSelect = document.getElementById("pekerjaan_ibu");
+      const penghasilanSelect = document.getElementById("penghasilan_ibu");
+      const nikInput = document.getElementById("nik_ibu");
+
+      if (isWafat) {
+        if (pekerjaanSelect) pekerjaanSelect.value = "Sudah Meninggal";
+        if (penghasilanSelect) penghasilanSelect.value = "Tidak Berpenghasilan";
+        if (nikInput) { nikInput.value = ""; nikInput.required = false; }
+      } else {
+        if (nikInput) nikInput.required = true;
+      }
+    });
+  });
+
+  // Enforce Numeric Input Keypad & Length Check
+  enforceNumericOnly("nisn", 10);
+  enforceNumericOnly("nik", 16);
+  enforceNumericOnly("no_kk", 16);
+  enforceNumericOnly("nik_ayah", 16);
+  enforceNumericOnly("nik_ibu", 16);
+  enforceNumericOnly("nik_wali", 16);
+  enforceNumericOnly("no_wa_ortu", 15);
+  enforceNumericOnly("no_wa_pd", 15);
+}
+
+function enforceNumericOnly(elementId, maxLength) {
+  const el = document.getElementById(elementId);
+  if (el) {
+    el.addEventListener("input", function() {
+      this.value = this.value.replace(/[^0-9]/g, "").slice(0, maxLength);
+    });
+  }
+}
+
+/**
+ * 3. NAVIGASI STEPPER FORM
+ */
+function nextStep() {
+  if (!AppState.locationCaptured) {
+    initGeolocationModal();
+    return;
+  }
+
+  // Validasi Step Saat Ini
+  if (!validateCurrentStep(AppState.currentStep)) {
+    return;
+  }
+
+  // Jika di Step 3 (Ibu) dan tidak memilih Wali, langsung lompat ke Step 5 (Kontak)
+  if (AppState.currentStep === 3 && !AppState.isWaliRequired) {
+    AppState.currentStep = 5;
+  } else if (AppState.currentStep < AppState.totalSteps) {
+    AppState.currentStep++;
+  } else if (AppState.currentStep === AppState.totalSteps) {
+    // Tampilkan Preview Dokumen Sebelum Submit Final
+    showPreviewModal();
+    return;
+  }
+
+  updateStepperUI();
+}
+
+function prevStep() {
+  // Jika di Step 5 dan Wali tidak dipilih, lompat kembali ke Step 3
+  if (AppState.currentStep === 5 && !AppState.isWaliRequired) {
+    AppState.currentStep = 3;
+  } else if (AppState.currentStep > 1) {
+    AppState.currentStep--;
+  }
+
+  updateStepperUI();
+}
+
+function updateStepperUI() {
+  // Hide all step sections
+  document.querySelectorAll(".form-step").forEach(step => step.classList.remove("active"));
+  
+  // Show active step section
+  const currentStepEl = document.getElementById("stepSection" + AppState.currentStep);
+  if (currentStepEl) currentStepEl.classList.add("active");
+
+  // Update Stepper Circles
+  for (let i = 1; i <= AppState.totalSteps; i++) {
+    const stepNav = document.getElementById("stepNav" + i);
+    if (!stepNav) continue;
+
+    stepNav.classList.remove("active", "completed");
+    if (i === AppState.currentStep) {
+      stepNav.classList.add("active");
+    } else if (i < AppState.currentStep) {
+      stepNav.classList.add("completed");
+    }
+  }
+
+  // Update Stepper Line Progress
+  const progressLine = document.getElementById("stepperProgress");
+  if (progressLine) {
+    const progressPercent = ((AppState.currentStep - 1) / (AppState.totalSteps - 1)) * 100;
+    progressLine.style.width = progressPercent + "%";
+  }
+
+  // Update Action Buttons
+  const btnPrev = document.getElementById("btnPrev");
+  const btnNext = document.getElementById("btnNext");
+
+  if (btnPrev) btnPrev.style.display = (AppState.currentStep === 1) ? "none" : "inline-flex";
+  if (btnNext) {
+    if (AppState.currentStep === AppState.totalSteps) {
+      btnNext.innerHTML = 'Pratinjau Dokumen <i class="fas fa-file-invoice"></i>';
+      btnNext.className = 'btn btn-success';
+    } else {
+      btnNext.innerHTML = 'Selanjutnya <i class="fas fa-arrow-right"></i>';
+      btnNext.className = 'btn btn-primary';
+    }
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/**
+ * 4. VALIDASI CLIENT-SIDE PER STEP
+ */
+function validateCurrentStep(step) {
+  let isValid = true;
+  let errorMsg = "";
+
+  if (step === 1) {
+    const nama = document.getElementById("nama_pd").value.trim();
+    const nisn = document.getElementById("nisn").value.trim();
+    const nik = document.getElementById("nik").value.trim();
+    const kk = document.getElementById("no_kk").value.trim();
+
+    if (!nama) errorMsg = "Nama Lengkap Peserta Didik wajib diisi.";
+    else if (nisn.length !== 10) errorMsg = "NISN wajib tepat 10 digit angka.";
+    else if (nik.length !== 16) errorMsg = "NIK peserta didik wajib tepat 16 digit angka.";
+    else if (kk.length !== 16) errorMsg = "Nomor Kartu Keluarga (KK) wajib tepat 16 digit angka.";
+
+  } else if (step === 2) {
+    const statusAyah = document.querySelector('input[name="status_ayah"]:checked').value;
+    const namaAyah = document.getElementById("nama_ayah").value.trim();
+    const nikAyah = document.getElementById("nik_ayah").value.trim();
+
+    if (!namaAyah) errorMsg = "Nama Ayah Kandung wajib diisi.";
+    else if (statusAyah === "Hidup" && nikAyah.length !== 16) errorMsg = "NIK Ayah wajib tepat 16 digit angka.";
+
+  } else if (step === 3) {
+    const statusIbu = document.querySelector('input[name="status_ibu"]:checked').value;
+    const namaIbu = document.getElementById("nama_ibu").value.trim();
+    const nikIbu = document.getElementById("nik_ibu").value.trim();
+
+    if (!namaIbu) errorMsg = "Nama Ibu Kandung wajib diisi.";
+    else if (statusIbu === "Hidup" && nikIbu.length !== 16) errorMsg = "NIK Ibu wajib tepat 16 digit angka.";
+
+  } else if (step === 4) {
+    if (AppState.isWaliRequired) {
+      const namaWali = document.getElementById("nama_wali").value.trim();
+      const nikWali = document.getElementById("nik_wali").value.trim();
+
+      if (!namaWali) errorMsg = "Nama Wali wajib diisi.";
+      else if (nikWali.length !== 16) errorMsg = "NIK Wali wajib tepat 16 digit angka.";
+    }
+  } else if (step === 5) {
+    const waOrtu = document.getElementById("no_wa_ortu").value.trim();
+    const waPd = document.getElementById("no_wa_pd").value.trim();
+    const email = document.getElementById("email_pd").value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!waOrtu) errorMsg = "Nomor WA Orang Tua wajib diisi.";
+    else if (!waPd) errorMsg = "Nomor WA Murid wajib diisi.";
+    else if (!emailRegex.test(email)) errorMsg = "Format Email Murid tidak valid.";
+
+  } else if (step === 6) {
+    const tinggi = document.getElementById("tinggi_badan").value;
+    const berat = document.getElementById("berat_badan").value;
+    const kepala = document.getElementById("lingkar_kepala").value;
+
+    if (!tinggi || tinggi <= 0) errorMsg = "Tinggi badan harus diisi angka > 0.";
+    else if (!berat || berat <= 0) errorMsg = "Berat badan harus diisi angka > 0.";
+    else if (!kepala || kepala <= 0) errorMsg = "Lingkar kepala harus diisi angka > 0.";
+  }
+
+  if (errorMsg) {
+    showNotification("Validasi Formulir", errorMsg, "warning");
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * 5. COLLECT FORM DATA & PREVIEW DOKUMEN
+ */
+function collectFormData() {
+  const form = document.getElementById("sipadikForm");
+  const formDataObj = new FormData(form);
+  const data = {};
+
+  formDataObj.forEach((value, key) => {
+    data[key] = value;
+  });
+
+  // Tambahkan koordinat & metadata
+  data.lintang = AppState.lat;
+  data.bujur = AppState.lng;
+
+  AppState.formData = data;
+  return data;
+}
+
+function showPreviewModal() {
+  const data = collectFormData();
+  const previewBody = document.getElementById("previewBody");
+
+  if (previewBody) {
+    previewBody.innerHTML = `
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px; font-size:0.88rem;">
+        <h4 style="color:#0f172a; margin-bottom:10px; border-bottom:2px solid #0284c7; padding-bottom:4px;">RINGKASAN DATA PESERTA DIDIK</h4>
+        <p><strong>Nama Lengkap:</strong> ${data.nama_pd}</p>
+        <p><strong>NISN / NIK:</strong> ${data.nisn} / ${data.nik}</p>
+        <p><strong>No. KK:</strong> ${data.no_kk}</p>
+        <p><strong>Tempat, Tgl Lahir:</strong> ${data.tempat_lahir}, ${data.tgl_lahir}</p>
+        <p><strong>Alamat:</strong> ${data.alamat}, RT ${data.rt}/RW ${data.rw}, Kel. ${data.kelurahan}, Kec. ${data.kecamatan}</p>
+        <p><strong>Tempat Tinggal / Moda:</strong> ${data.tempat_tinggal} / ${data.moda_transportasi}</p>
+        
+        <h4 style="color:#0f172a; margin:14px 0 10px 0; border-bottom:2px solid #0284c7; padding-bottom:4px;">ORANG TUA / WALI</h4>
+        <p><strong>Ayah Kandung (${data.status_ayah}):</strong> ${data.nama_ayah} (${data.pekerjaan_ayah})</p>
+        <p><strong>Ibu Kandung (${data.status_ibu}):</strong> ${data.nama_ibu} (${data.pekerjaan_ibu})</p>
+        ${data.tempat_tinggal === "Wali" ? `<p><strong>Wali:</strong> ${data.nama_wali} (${data.pekerjaan_wali})</p>` : ''}
+        
+        <h4 style="color:#0f172a; margin:14px 0 10px 0; border-bottom:2px solid #0284c7; padding-bottom:4px;">KONTAK & PERIODIK</h4>
+        <p><strong>WA Ort / WA Murid:</strong> ${data.no_wa_ortu} / ${data.no_wa_pd}</p>
+        <p><strong>Email:</strong> ${data.email_pd}</p>
+        <p><strong>Tinggi / Berat / Kepala:</strong> ${data.tinggi_badan} cm / ${data.berat_badan} kg / ${data.lingkar_kepala} cm</p>
+      </div>
+    `;
+  }
+
+  const previewModal = document.getElementById("previewModal");
+  if (previewModal) previewModal.classList.add("active");
+}
+
+function closePreviewModal() {
+  const previewModal = document.getElementById("previewModal");
+  if (previewModal) previewModal.classList.remove("active");
+}
+
+/**
+ * 6. SUBMIT DATA KE SERVER (GAS BACKEND)
+ */
+function confirmAndSubmitForm() {
+  const btnSubmit = document.getElementById("btnConfirmSubmit");
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses & Merangkum PDF...';
+  }
+
+  const payload = AppState.formData;
+
+  // Jika dijalankan via Google Apps Script (HTML Service)
+  if (typeof google !== 'undefined' && google.script && google.script.run) {
+    google.script.run
+      .withSuccessHandler(onSubmitSuccess)
+      .withFailureHandler(onSubmitFailure)
+      .apiSubmitForm(payload);
+  } else {
+    // Jika dijalankan via GitHub Pages (HTTP Fetch Post)
+    fetch(AppState.webAppUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "submitForm", ...payload })
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (res.success) onSubmitSuccess(res);
+      else onSubmitFailure(res.message);
+    })
+    .catch(err => onSubmitFailure(err.toString()));
+  }
+}
+
+function onSubmitSuccess(response) {
+  closePreviewModal();
+
+  const resData = response.data || response;
+  const pdfUrl = resData.pdfUrl;
+
+  const resultModal = document.getElementById("resultModal");
+  const resultBody = document.getElementById("resultBody");
+
+  if (resultBody) {
+    resultBody.innerHTML = `
+      <div style="text-align:center; padding:10px;">
+        <i class="fas fa-check-circle" style="font-size:3.5rem; color:#10b981; margin-bottom:16px;"></i>
+        <h3 style="color:#0f172a; font-weight:800; margin-bottom:8px;">Data Berhasil Disimpan!</h3>
+        <p style="font-size:0.9rem; color:#64748b; margin-bottom:20px;">
+          Terima kasih <strong>${resData.nama_pd}</strong>. Data pemutakhiran Anda telah tersimpan dan dokumen bukti pemutakhiran (PDF) telah berhasil diterbitkan.
+        </p>
+
+        <a href="${pdfUrl}" target="_blank" class="btn btn-primary" style="padding:14px 28px; width:100%; margin-bottom:16px;">
+          <i class="fas fa-download"></i> Unduh File Bukti PDF
+        </a>
+
+        <div style="background:#fef3c7; border-left:4px solid #f59e0b; padding:14px; border-radius:8px; text-align:left; font-size:0.84rem; color:#78350f;">
+          <strong><i class="fas fa-exclamation-triangle"></i> INSTRUKSI PENTING PASCA UNDUH:</strong>
+          <ol style="margin-left:18px; margin-top:6px;">
+            <li>Cetak (print) dokumen PDF bukti pemutakhiran tersebut.</li>
+            <li>Tandatangani dokumen bersama Orang Tua / Wali Anda.</li>
+            <li>Serahkan berkas fisik tersebut kepada <strong>Wali Kelas masing-masing</strong>.</li>
+          </ol>
+        </div>
+      </div>
+    `;
+  }
+
+  if (resultModal) resultModal.classList.add("active");
+}
+
+function onSubmitFailure(errorMsg) {
+  const btnSubmit = document.getElementById("btnConfirmSubmit");
+  if (btnSubmit) {
+    btnSubmit.disabled = false;
+    btnSubmit.innerHTML = 'Konfirmasi, Data Sudah Benar';
+  }
+  showNotification("Gagal Submit Data", errorMsg, "danger");
+}
+
+/**
+ * Helper Popup Notifikasi / Modal Alert
+ */
+function showNotification(title, message, type = "info") {
+  const notifModal = document.getElementById("notifModal");
+  const notifTitle = document.getElementById("notifTitle");
+  const notifMessage = document.getElementById("notifMessage");
+
+  if (notifTitle) notifTitle.textContent = title;
+  if (notifMessage) notifMessage.textContent = message;
+
+  if (notifModal) notifModal.classList.add("active");
+}
+
+function closeNotifModal() {
+  const notifModal = document.getElementById("notifModal");
+  if (notifModal) notifModal.classList.remove("active");
+}
+</script>

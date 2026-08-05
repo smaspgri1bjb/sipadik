@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SIPADIK - SMAS PGRI 1 Banjarbaru</title>
+  <link rel="icon" type="image/png" href="<?= URL_FAVICON ?>">
+  <!-- Font Awesome CDN untuk ikon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Flatpickr Datepicker CDN & Indonesian Locale -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+  <?!= include('style'); ?>
+</head>
+<body>
+
+  <!-- App Header / Navbar -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="?page=index" class="brand">
+        <img src="<?= URL_LOGO ?>" alt="Logo SIPADIK" class="brand-logo">
+        <div class="brand-info">
+          <h1>SIPADIK</h1>
+          <p>SMAS PGRI 1 Banjarbaru</p>
+        </div>
+      </a>
+      <a href="?page=admin" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.8rem;">
+        <i class="fas fa-user-shield"></i> Admin Login
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-banner">
+    <div class="hero-card">
+      <div class="hero-text">
+        <h2>Pemutakhiran Data Peserta Didik 2026</h2>
+        <p>Sistem resmi pembaharuan data induk siswa SMAS PGRI 1 Banjarbaru untuk integrasi Dapodik & Pelayanan Akademik.</p>
+      </div>
+      <img src="<?= URL_HERO ?>" alt="Hero Banner" class="hero-image">
+    </div>
+  </section>
+
+  <!-- Notice Banner / Persyaratan Dokumen Wajib -->
+  <section class="notice-box">
+    <div class="alert-banner">
+      <div class="alert-icon">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
+      <div class="alert-content">
+        <h4>Pemberitahuan & Persyaratan Berkas Wajib</h4>
+        <p>
+          Pengisian formulir <strong>harus didampingi oleh orang tua / wali</strong>. Sebelum mengisi, siapkan dokumen fisik: 
+          <strong>Kartu Keluarga (KK)</strong>, <strong>Akta Kelahiran</strong>, dan <strong>Akta Kematian</strong> (apabila salah satu / kedua orang tua berstatus wafat).
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Container Main Form Multi-Tahap -->
+  <main class="main-container">
+    <div class="form-card">
+      
+      <!-- Stepper / Indicator Progress Line -->
+      <div class="stepper-wrapper">
+        <div class="stepper">
+          <div class="stepper-progress" id="stepperProgress"></div>
+
+          <div class="step-item active" id="stepNav1">
+            <div class="step-circle">1</div>
+            <span class="step-label">Data Pribadi</span>
+          </div>
+
+          <div class="step-item" id="stepNav2">
+            <div class="step-circle">2</div>
+            <span class="step-label">Data Ayah</span>
+          </div>
+
+          <div class="step-item" id="stepNav3">
+            <div class="step-circle">3</div>
+            <span class="step-label">Data Ibu</span>
+          </div>
+
+          <div class="step-item" id="stepNav4" style="display:none;">
+            <div class="step-circle">4</div>
+            <span class="step-label">Data Wali</span>
+          </div>
+
+          <div class="step-item" id="stepNav5">
+            <div class="step-circle">5</div>
+            <span class="step-label">Kontak</span>
+          </div>
+
+          <div class="step-item" id="stepNav6">
+            <div class="step-circle">6</div>
+            <span class="step-label">Data Periodik</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Form Body -->
+      <form id="sipadikForm" onsubmit="return false;">
+
+        <!-- TAHAP 1: DATA PRIBADI -->
+        <div class="form-step active" id="stepSection1">
+          <div class="step-header">
+            <h3><i class="fas fa-user"></i> Tahap 1: Data Pribadi Peserta Didik</h3>
+            <p>Isi identitas diri sesuai dengan data yang tertera pada Kartu Keluarga & Akta Lahir.</p>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="nama_pd">Nama Lengkap Peserta Didik <span class="required">*</span></label>
+              <input type="text" id="nama_pd" name="nama_pd" placeholder="Contoh: Muhammad Rizky Pratama" required>
+            </div>
+
+            <div class="form-group">
+              <label>Jenis Kelamin <span class="required">*</span></label>
+              <div class="radio-group">
+                <label class="radio-card">
+                  <input type="radio" name="jk" value="L" checked>
+                  <span>Laki-laki</span>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="jk" value="P">
+                  <span>Perempuan</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="nisn">NISN (10 Digit) <span class="required">*</span></label>
+              <input type="text" id="nisn" name="nisn" inputmode="numeric" pattern="[0-9]*" maxlength="10" placeholder="Contoh: 0065432109" required>
+            </div>
+
+            <div class="form-group">
+              <label for="nik">NIK Peserta Didik (16 Digit) <span class="required">*</span></label>
+              <input type="text" id="nik" name="nik" inputmode="numeric" pattern="[0-9]*" maxlength="16" placeholder="Contoh: 6372011508060001" required>
+            </div>
+
+            <div class="form-group">
+              <label for="no_kk">No. Kartu Keluarga (16 Digit) <span class="required">*</span></label>
+              <input type="text" id="no_kk" name="no_kk" inputmode="numeric" pattern="[0-9]*" maxlength="16" placeholder="Contoh: 6372012010150003" required>
+            </div>
+
+            <div class="form-group">
+              <label for="tempat_lahir">Tempat Lahir <span class="required">*</span></label>
+              <input type="text" id="tempat_lahir" name="tempat_lahir" placeholder="Contoh: Banjarbaru" required>
+            </div>
+
+            <div class="form-group">
+              <label for="tgl_lahir">Tanggal Lahir <span class="required">*</span></label>
+              <input type="text" id="tgl_lahir" name="tgl_lahir" placeholder="Pilih Tanggal Lahir" required>
+            </div>
+
+            <div class="form-group">
+              <label for="no_akta">No. Registrasi Akta Lahir <span class="required">*</span></label>
+              <input type="text" id="no_akta" name="no_akta" placeholder="Contoh: 6372-LT-10172010-0061" required>
+            </div>
+
+            <div class="form-group">
+              <label for="agama">Agama & Kepercayaan <span class="required">*</span></label>
+              <select id="agama" name="agama" required>
+                <? for (var i = 0; i < AGAMA.length; i++) { ?>
+                  <option value="<?= AGAMA[i] ?>"><?= AGAMA[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="alamat">Alamat Rumah (Nama Jalan & No. Rumah) <span class="required">*</span></label>
+              <input type="text" id="alamat" name="alamat" placeholder="Contoh: Jl. Al-Jafri No. 43" required>
+            </div>
+
+            <div class="form-group">
+              <label for="rt">RT <span class="required">*</span></label>
+              <input type="text" id="rt" name="rt" placeholder="03" required>
+            </div>
+
+            <div class="form-group">
+              <label for="rw">RW <span class="required">*</span></label>
+              <input type="text" id="rw" name="rw" placeholder="01" required>
+            </div>
+
+            <div class="form-group">
+              <label for="kelurahan">Kelurahan <span class="required">*</span></label>
+              <input type="text" id="kelurahan" name="kelurahan" placeholder="Contoh: Kemuning" required>
+            </div>
+
+            <div class="form-group">
+              <label for="kecamatan">Kecamatan <span class="required">*</span></label>
+              <input type="text" id="kecamatan" name="kecamatan" placeholder="Contoh: Banjarbaru Selatan" required>
+            </div>
+
+            <div class="form-group">
+              <label for="kode_pos">Kode Pos</label>
+              <input type="text" id="kode_pos" name="kode_pos" inputmode="numeric" pattern="[0-9]*" placeholder="70714">
+            </div>
+
+            <div class="form-group">
+              <label for="tempat_tinggal">Tempat Tinggal <span class="required">*</span></label>
+              <select id="tempat_tinggal" name="tempat_tinggal" required>
+                <? for (var i = 0; i < TEMPAT_TINGGAL.length; i++) { ?>
+                  <option value="<?= TEMPAT_TINGGAL[i] ?>"><?= TEMPAT_TINGGAL[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="moda_transportasi">Moda Transportasi Ke Sekolah <span class="required">*</span></label>
+              <select id="moda_transportasi" name="moda_transportasi" required>
+                <? for (var i = 0; i < MODA_TRANSPORTASI.length; i++) { ?>
+                  <option value="<?= MODA_TRANSPORTASI[i] ?>"><?= MODA_TRANSPORTASI[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="anak_ke">Anak Ke-berapa (Berdasarkan KK) <span class="required">*</span></label>
+              <input type="number" id="anak_ke" name="anak_ke" min="1" max="20" placeholder="1" required>
+            </div>
+
+            <div class="form-group">
+              <label for="asal_sekolah">Asal Sekolah (SMP/MTs) <span class="required">*</span></label>
+              <input type="text" id="asal_sekolah" name="asal_sekolah" placeholder="Contoh: SMP Negeri 1 Banjarbaru" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAHAP 2: DATA AYAH KANDUNG -->
+        <div class="form-step" id="stepSection2">
+          <div class="step-header">
+            <h3><i class="fas fa-user-tie"></i> Tahap 2: Data Ayah Kandung</h3>
+            <p>Masukkan identitas lengkap Ayah Kandung.</p>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>Status Hidup Ayah <span class="required">*</span></label>
+              <div class="radio-group">
+                <label class="radio-card">
+                  <input type="radio" name="status_ayah" value="Hidup" checked>
+                  <span>Masih Hidup</span>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="status_ayah" value="Wafat">
+                  <span>Sudah Meninggal (Wafat)</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="nama_ayah">Nama Ayah Kandung <span class="required">*</span></label>
+              <input type="text" id="nama_ayah" name="nama_ayah" placeholder="Contoh: Bambang Sutedjo" required>
+            </div>
+
+            <div class="form-group">
+              <label for="nik_ayah">NIK Ayah (16 Digit)</label>
+              <input type="text" id="nik_ayah" name="nik_ayah" inputmode="numeric" pattern="[0-9]*" maxlength="16" placeholder="16 digit NIK Ayah">
+            </div>
+
+            <div class="form-group">
+              <label for="thn_lahir_ayah">Tahun Lahir Ayah</label>
+              <input type="number" id="thn_lahir_ayah" name="thn_lahir_ayah" min="1930" max="2010" placeholder="Contoh: 1975">
+            </div>
+
+            <div class="form-group">
+              <label for="pendidikan_ayah">Pendidikan Terakhir Ayah</label>
+              <select id="pendidikan_ayah" name="pendidikan_ayah">
+                <? for (var i = 0; i < PENDIDIKAN.length; i++) { ?>
+                  <option value="<?= PENDIDIKAN[i] ?>"><?= PENDIDIKAN[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="pekerjaan_ayah">Pekerjaan Ayah</label>
+              <select id="pekerjaan_ayah" name="pekerjaan_ayah">
+                <? for (var i = 0; i < PEKERJAAN.length; i++) { ?>
+                  <option value="<?= PEKERJAAN[i] ?>"><?= PEKERJAAN[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="penghasilan_ayah">Penghasilan Bulanan Ayah</label>
+              <select id="penghasilan_ayah" name="penghasilan_ayah">
+                <? for (var i = 0; i < PENGHASILAN.length; i++) { ?>
+                  <option value="<?= PENGHASILAN[i] ?>"><?= PENGHASILAN[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAHAP 3: DATA IBU KANDUNG -->
+        <div class="form-step" id="stepSection3">
+          <div class="step-header">
+            <h3><i class="fas fa-user-nurse"></i> Tahap 3: Data Ibu Kandung</h3>
+            <p>Masukkan identitas lengkap Ibu Kandung.</p>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>Status Hidup Ibu <span class="required">*</span></label>
+              <div class="radio-group">
+                <label class="radio-card">
+                  <input type="radio" name="status_ibu" value="Hidup" checked>
+                  <span>Masih Hidup</span>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="status_ibu" value="Wafat">
+                  <span>Sudah Meninggal (Wafat)</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="nama_ibu">Nama Ibu Kandung <span class="required">*</span></label>
+              <input type="text" id="nama_ibu" name="nama_ibu" placeholder="Contoh: Siti Aminah" required>
+            </div>
+
+            <div class="form-group">
+              <label for="nik_ibu">NIK Ibu (16 Digit)</label>
+              <input type="text" id="nik_ibu" name="nik_ibu" inputmode="numeric" pattern="[0-9]*" maxlength="16" placeholder="16 digit NIK Ibu">
+            </div>
+
+            <div class="form-group">
+              <label for="thn_lahir_ibu">Tahun Lahir Ibu</label>
+              <input type="number" id="thn_lahir_ibu" name="thn_lahir_ibu" min="1930" max="2010" placeholder="Contoh: 1980">
+            </div>
+
+            <div class="form-group">
+              <label for="pendidikan_ibu">Pendidikan Terakhir Ibu</label>
+              <select id="pendidikan_ibu" name="pendidikan_ibu">
+                <? for (var i = 0; i < PENDIDIKAN.length; i++) { ?>
+                  <option value="<?= PENDIDIKAN[i] ?>"><?= PENDIDIKAN[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="pekerjaan_ibu">Pekerjaan Ibu</label>
+              <select id="pekerjaan_ibu" name="pekerjaan_ibu">
+                <? for (var i = 0; i < PEKERJAAN.length; i++) { ?>
+                  <option value="<?= PEKERJAAN[i] ?>"><?= PEKERJAAN[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="penghasilan_ibu">Penghasilan Bulanan Ibu</label>
+              <select id="penghasilan_ibu" name="penghasilan_ibu">
+                <? for (var i = 0; i < PENGHASILAN.length; i++) { ?>
+                  <option value="<?= PENGHASILAN[i] ?>"><?= PENGHASILAN[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAHAP 4: DATA WALI (CONDITIONAL) -->
+        <div class="form-step" id="stepSection4">
+          <div class="step-header">
+            <h3><i class="fas fa-user-shield"></i> Tahap 4: Data Wali Peserta Didik</h3>
+            <p>Formulir ini diisi apabila peserta didik tinggal bersama Wali.</p>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label for="nama_wali">Nama Wali <span class="required">*</span></label>
+              <input type="text" id="nama_wali" name="nama_wali" placeholder="Contoh: Ahmad Subardjo">
+            </div>
+
+            <div class="form-group">
+              <label for="nik_wali">NIK Wali (16 Digit)</label>
+              <input type="text" id="nik_wali" name="nik_wali" inputmode="numeric" pattern="[0-9]*" maxlength="16" placeholder="16 digit NIK Wali">
+            </div>
+
+            <div class="form-group">
+              <label for="thn_lahir_wali">Tahun Lahir Wali</label>
+              <input type="number" id="thn_lahir_wali" name="thn_lahir_wali" min="1930" max="2010" placeholder="Contoh: 1970">
+            </div>
+
+            <div class="form-group">
+              <label for="pendidikan_wali">Pendidikan Terakhir Wali</label>
+              <select id="pendidikan_wali" name="pendidikan_wali">
+                <? for (var i = 0; i < PENDIDIKAN.length; i++) { ?>
+                  <option value="<?= PENDIDIKAN[i] ?>"><?= PENDIDIKAN[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="pekerjaan_wali">Pekerjaan Wali</label>
+              <select id="pekerjaan_wali" name="pekerjaan_wali">
+                <? for (var i = 0; i < PEKERJAAN.length; i++) { ?>
+                  <option value="<?= PEKERJAAN[i] ?>"><?= PEKERJAAN[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="penghasilan_wali">Penghasilan Bulanan Wali</label>
+              <select id="penghasilan_wali" name="penghasilan_wali">
+                <? for (var i = 0; i < PENGHASILAN.length; i++) { ?>
+                  <option value="<?= PENGHASILAN[i] ?>"><?= PENGHASILAN[i] ?></option>
+                <? } ?>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAHAP 5: KONTAK -->
+        <div class="form-step" id="stepSection5">
+          <div class="step-header">
+            <h3><i class="fas fa-address-book"></i> Tahap 5: Kontak Orang Tua & Murid</h3>
+            <p>Pastikan nomor WhatsApp aktif untuk penerimaan informasi sekolah.</p>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="no_wa_ortu">No. WhatsApp Orang Tua / Wali <span class="required">*</span></label>
+              <input type="text" id="no_wa_ortu" name="no_wa_ortu" inputmode="numeric" pattern="[0-9]*" placeholder="Contoh: 081234567890" required>
+            </div>
+
+            <div class="form-group">
+              <label for="no_wa_pd">No. WhatsApp Murid <span class="required">*</span></label>
+              <input type="text" id="no_wa_pd" name="no_wa_pd" inputmode="numeric" pattern="[0-9]*" placeholder="Contoh: 089876543210" required>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="email_pd">Email Peserta Didik <span class="required">*</span></label>
+              <input type="email" id="email_pd" name="email_pd" placeholder="Contoh: nama.siswa@gmail.com" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAHAP 6: DATA PERIODIK -->
+        <div class="form-step" id="stepSection6">
+          <div class="step-header">
+            <h3><i class="fas fa-ruler-combined"></i> Tahap 6: Data Periodik Peserta Didik</h3>
+            <p>Masukkan data fisik & lokasi otomatis.</p>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="tinggi_badan">Tinggi Badan (cm) <span class="required">*</span></label>
+              <input type="number" id="tinggi_badan" name="tinggi_badan" min="50" max="250" placeholder="Contoh: 165" required>
+            </div>
+
+            <div class="form-group">
+              <label for="berat_badan">Berat Badan (kg) <span class="required">*</span></label>
+              <input type="number" id="berat_badan" name="berat_badan" min="20" max="200" placeholder="Contoh: 55" required>
+            </div>
+
+            <div class="form-group">
+              <label for="lingkar_kepala">Lingkar Kepala (cm) <span class="required">*</span></label>
+              <input type="number" id="lingkar_kepala" name="lingkar_kepala" min="30" max="100" placeholder="Contoh: 54" required>
+            </div>
+
+            <div class="form-group">
+              <label for="jml_saudara">Jumlah Saudara Kandung <span class="required">*</span></label>
+              <input type="number" id="jml_saudara" name="jml_saudara" min="0" max="20" placeholder="0 jika anak tunggal" required>
+              <small style="color:var(--text-muted); font-size:0.75rem;">Dihitung tanpa peserta didik sendiri (jumlah kakak + adik).</small>
+            </div>
+
+            <!-- Field Hidden Geolokasi -->
+            <input type="hidden" id="lintang" name="lintang">
+            <input type="hidden" id="bujur" name="bujur">
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Navigasi Form -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="btnPrev" onclick="prevStep();" style="display:none;">
+            <i class="fas fa-arrow-left"></i> Sebelumnya
+          </button>
+          <button type="button" class="btn btn-primary" id="btnNext" onclick="nextStep();">
+            Selanjutnya <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </main>
+
+  <!-- Modal Izin Lokasi GPS -->
+  <div class="modal-overlay" id="geoModal">
+    <div class="modal-card" style="text-align:center;">
+      <i class="fas fa-map-marker-alt" style="font-size:3rem; color:var(--primary); margin-bottom:16px;"></i>
+      <h3 class="modal-title">Akses Lokasi Diperlukan</h3>
+      <div class="modal-body">
+        Aplikasi <strong>SIPADIK SMAS PGRI 1 Banjarbaru</strong> memerlukan izin lokasi (GPS) Anda untuk mengukur jarak rumah ke sekolah dan estimasi waktu tempuh secara akurat.
+      </div>
+      <div class="modal-actions" style="justify-content:center;">
+        <button type="button" class="btn btn-primary" id="btnEnableGps" onclick="requestDeviceLocation();">
+          <i class="fas fa-crosshairs"></i> Aktifkan GPS Sekarang
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Pratinjau Dokumen -->
+  <div class="modal-overlay" id="previewModal">
+    <div class="modal-card">
+      <h3 class="modal-title"><i class="fas fa-file-invoice"></i> Pratinjau Data Pemutakhiran</h3>
+      <div class="modal-body" id="previewBody">
+        <!-- Content ringkasan data diisi via JS -->
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closePreviewModal();">Perbaiki Data</button>
+        <button type="button" class="btn btn-success" id="btnConfirmSubmit" onclick="confirmAndSubmitForm();">
+          Konfirmasi, Data Sudah Benar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Hasil & Download PDF -->
+  <div class="modal-overlay" id="resultModal">
+    <div class="modal-card">
+      <div class="modal-body" id="resultBody">
+        <!-- Content hasil & download PDF diisi via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Notifikasi Alert Sederhana -->
+  <div class="modal-overlay" id="notifModal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="notifTitle">Pemberitahuan</h3>
+      <div class="modal-body" id="notifMessage"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" onclick="closeNotifModal();">Mengerti</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p><?= FOOTER_COPYRIGHT ?></p>
+  </footer>
+
+  <?!= include('javascript'); ?>
+</body>
+</html>

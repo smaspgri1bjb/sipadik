@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pratinjau Dokumen - SIPADIK</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <?!= include('style'); ?>
+</head>
+<body style="background:#f1f5f9; padding:20px;">
+  <div style="max-width:800px; margin:0 auto; background:white; padding:30px; border-radius:16px; box-shadow:var(--shadow-lg);">
+    <div style="text-align:center; border-bottom:2px solid var(--border); padding-bottom:16px; margin-bottom:24px;">
+      <img src="<?= URL_LOGO ?>" alt="Logo" style="width:60px; height:60px;">
+      <h2 style="font-weight:800; color:var(--secondary);">SMAS PGRI 1 BANJARBARU</h2>
+      <p style="font-size:0.9rem; color:var(--text-muted);">Bukti Pemutakhiran Data Peserta Didik (SIPADIK 2026)</p>
+    </div>
+
+    <div id="previewDocContent">
+      <div class="alert-banner" style="margin-bottom:20px;">
+        <i class="fas fa-info-circle alert-icon"></i>
+        <div class="alert-content">
+          <h4>Pratinjau Sebelum Penerbitan PDF</h4>
+          <p>Harap periksa seluruh rincian data di bawah ini. Pastikan tidak ada kesalahan ejaan pada nama, NIK, NISN, maupun data orang tua.</p>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; font-size:0.88rem;">
+        <div><strong>Nama Peserta Didik:</strong> <span id="prevNamaPD">-</span></div>
+        <div><strong>NISN / NIK:</strong> <span id="prevNisnNik">-</span></div>
+        <div><strong>No. Kartu Keluarga:</strong> <span id="prevNoKk">-</span></div>
+        <div><strong>Tempat, Tgl Lahir:</strong> <span id="prevTttl">-</span></div>
+        <div><strong>Agama:</strong> <span id="prevAgama">-</span></div>
+        <div><strong>Tempat Tinggal:</strong> <span id="prevTempatTinggal">-</span></div>
+        <div><strong>Nama Ayah:</strong> <span id="prevNamaAyah">-</span></div>
+        <div><strong>Nama Ibu:</strong> <span id="prevNamaIbu">-</span></div>
+        <div><strong>Nama Wali:</strong> <span id="prevNamaWali">-</span></div>
+        <div><strong>Jarak ke Sekolah:</strong> <span id="prevJarak">-</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top:30px; display:flex; justify-content:space-between;">
+      <a href="?page=index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Kembali Edit</a>
+      <button class="btn btn-success" onclick="window.print();"><i class="fas fa-print"></i> Cetak / Simpan</button>
+    </div>
+  </div>
+</body>
+</html>

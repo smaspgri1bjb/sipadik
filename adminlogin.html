@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - SIPADIK</title>
+  <link rel="icon" type="image/png" href="<?= URL_FAVICON ?>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <?!= include('style'); ?>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+    .login-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 420px;
+      padding: 36px 30px;
+      box-shadow: 0 20px 30px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .login-logo {
+      width: 70px;
+      height: 70px;
+      object-fit: contain;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: transform 0.2s ease;
+    }
+    .login-logo:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <a href="?page=index">
+      <img src="<?= URL_LOGO ?>" alt="Logo SIPADIK" class="login-logo" title="Klik untuk kembali ke Beranda">
+    </a>
+    <h2 style="font-size:1.4rem; font-weight:800; color:var(--secondary); margin-bottom:4px;">PANEL ADMIN SIPADIK</h2>
+    <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:28px;">SMAS PGRI 1 Banjarbaru</p>
+
+    <div id="loginAlert" style="display:none; padding:12px; border-radius:8px; font-size:0.85rem; margin-bottom:20px; text-align:left;"></div>
+
+    <form id="adminLoginForm" onsubmit="handleAdminLogin(event);">
+      <div class="form-group" style="text-align:left; margin-bottom:20px;">
+        <label for="adminPassword">Password Administrator <span class="required">*</span></label>
+        <div style="position:relative;">
+          <input type="password" id="adminPassword" name="password" placeholder="Masukkan password admin" required style="padding-right:40px;">
+          <i class="fas fa-lock" style="position:absolute; right:14px; top:14px; color:var(--text-muted);"></i>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="btnLogin" style="width:100%; padding:12px;">
+        <i class="fas fa-sign-in-alt"></i> Masuk Dashboard
+      </button>
+    </form>
+
+    <div style="margin-top:24px;">
+      <a href="?page=index" style="font-size:0.82rem; color:var(--primary); text-decoration:none; font-weight:600;">
+        <i class="fas fa-arrow-left"></i> Kembali ke Form Siswa
+      </a>
+    </div>
+  </div>
+
+  <script>
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const pass = document.getElementById("adminPassword").value;
+      const btn = document.getElementById("btnLogin");
+      const alertBox = document.getElementById("loginAlert");
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
+      alertBox.style.display = "none";
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(onLoginSuccess)
+          .withFailureHandler(onLoginError)
+          .apiLoginAdmin(pass);
+      } else {
+        fetch(window.location.href, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "loginAdmin", password: pass })
+        })
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) onLoginSuccess(res);
+          else onLoginError(res.message);
+        })
+        .catch(err => onLoginError(err.toString()));
+      }
+    }
+
+    function onLoginSuccess(res) {
+      if (res.success) {
+        const token = res.data ? res.data.token : "AUTH_OK";
+        sessionStorage.setItem("SIPADIK_ADMIN_TOKEN", token);
+        window.location.href = "?page=dashboard";
+      } else {
+        onLoginError(res.message);
+      }
+    }
+
+    function onLoginError(msg) {
+      const btn = document.getElementById("btnLogin");
+      const alertBox = document.getElementById("loginAlert");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk Dashboard';
+
+      alertBox.style.display = "block";
+      alertBox.style.background = "#fee2e2";
+      alertBox.style.color = "#991b1b";
+      alertBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + (msg || "Password admin salah!");
+    }
+  </script>
+</body>
+</html>
